@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate-patches:
+    name: Validate patch series
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check series file matches patch directory
+        run: |
+          set -euo pipefail
+          if [ ! -f patches/series ]; then
+            echo "::error::patches/series is missing"
+            exit 1
+          fi
+          declare -a series_files
+          mapfile -t series_files < <(grep -v '^\s*$\|^\s*#' patches/series || true)
+          declare -a disk_files
+          mapfile -t disk_files < <(cd patches && ls -1 *.patch 2>/dev/null | sort || true)
+          diff <(printf '%s\n' "${series_files[@]}" | sort) \
+               <(printf '%s\n' "${disk_files[@]}" | sort) \
+            || { echo "::error::patches/series does not match patches on disk"; exit 1; }
+
+      - name: Lint patch headers
+        run: |
+          set -euo pipefail
+          fail=0
+          for p in patches/*.patch; do
+            [ -f "$p" ] || continue
+            grep -q '^Subject: \[arcer\] ' "$p" || { echo "::error file=$p::Missing 'Subject: [arcer] ...' header"; fail=1; }
+            grep -q '^Author: ' "$p" || { echo "::error file=$p::Missing 'Author:' header"; fail=1; }
+          done
+          exit $fail
+
+  shellcheck:
+    name: shellcheck scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: ./scripts
+
+  yamllint:
+    name: yamllint workflows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: yamllint
+        run: |
+          pip install yamllint
+          yamllint -d "{extends: default, rules: {line-length: {max: 200}, document-start: disable, truthy: {check-keys: false}}}" .github/workflows
+
+  markdownlint:
+    name: Lint docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: |
+            AGENTS.md
+            README.md
+            docs/**/*.md
