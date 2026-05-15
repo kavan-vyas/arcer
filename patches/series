@@ -1,0 +1,5 @@
+# patches/series: ordered list of arcer patches applied on top of the
+# ungoogled-chromium baseline. One patch filename per line, in apply order.
+# Blank lines and lines starting with '#' are ignored. Filenames are
+# resolved relative to this directory. See docs/patch-conventions.md for
+# naming rules.

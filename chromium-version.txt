@@ -1,0 +1,5 @@
+148.0.7778.167-1
+
+# ungoogled-chromium release tag. Targets Chromium milestone M148
+# (148.0.7778.167). Update this file when bumping the pinned milestone;
+# scripts/fetch-chromium.sh reads the first non-comment line as the tag.
