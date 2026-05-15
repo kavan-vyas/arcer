@@ -1,0 +1,19 @@
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build output (lives outside repo anyway, but defensive)
+out/
+build/
+
+# Local env
+.env
+.env.local
